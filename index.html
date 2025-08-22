@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub File Uploader</title>
+    <title>GitHub File Uploader with Repository Selection</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -64,6 +64,71 @@
             padding: 30px;
         }
         
+        .repo-selection {
+            background: #161b22;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid #30363d;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #e6edf3;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .select-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        select {
+            flex: 1;
+            background: #0d1117;
+            color: #e6edf3;
+            border: 1px solid #30363d;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+        }
+        
+        select:focus {
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3);
+        }
+        
+        .btn {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: #2ea043;
+        }
+        
+        .btn-secondary {
+            background: #30363d;
+        }
+        
+        .btn-secondary:hover {
+            background: #484f58;
+        }
+        
         .upload-area {
             border: 2px dashed #30363d;
             border-radius: 8px;
@@ -114,17 +179,6 @@
         
         .uploaded-files {
             margin-top: 30px;
-        }
-        
-        .section-title {
-            font-size: 22px;
-            margin-bottom: 15px;
-            color: #e6edf3;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #30363d;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
         
         .file-list {
@@ -359,6 +413,14 @@
                 padding: 20px;
             }
             
+            .select-group {
+                flex-direction: column;
+            }
+            
+            select {
+                width: 100%;
+            }
+            
             .upload-area {
                 padding: 30px 15px;
             }
@@ -391,10 +453,32 @@
     <div class="container">
         <header>
             <h1><i class="fab fa-github"></i> GitHub File Uploader</h1>
-            <p class="subtitle">Upload files and store them directly on GitHub repositories</p>
+            <p class="subtitle">Upload files to your GitHub repositories with ease</p>
         </header>
         
         <div class="content">
+            <div class="repo-selection">
+                <h2 class="section-title"><i class="fas fa-folder"></i> Select Repository</h2>
+                <div class="select-group">
+                    <select id="repoSelect">
+                        <option value="">-- Select a repository --</option>
+                        <option value="my-website">my-website</option>
+                        <option value="project-files">project-files</option>
+                        <option value="documents">documents</option>
+                        <option value="images">images</option>
+                        <option value="new">+ Create new repository</option>
+                    </select>
+                    <button class="btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
+                </div>
+                
+                <div id="newRepoForm" style="display: none; margin-top: 15px;">
+                    <div class="select-group">
+                        <input type="text" placeholder="New repository name" style="flex: 1; background: #0d1117; color: #e6edf3; border: 1px solid #30363d; padding: 12px 15px; border-radius: 6px; font-size: 16px;">
+                        <button class="btn"><i class="fas fa-plus"></i> Create</button>
+                    </div>
+                </div>
+            </div>
+            
             <div class="upload-area" id="uploadArea">
                 <i class="fas fa-cloud-upload-alt upload-icon"></i>
                 <p class="upload-text">Drag & drop your file here</p>
@@ -418,19 +502,15 @@
             </div>
             
             <div class="github-info">
-                <h3 class="info-title"><i class="fas fa-info-circle"></i> How to actually upload to GitHub</h3>
+                <h3 class="info-title"><i class="fas fa-info-circle"></i> How to upload files to GitHub</h3>
                 <div class="info-content">
                     <p>This demo simulates GitHub file uploads. To actually upload files to GitHub:</p>
                     <ol>
-                        <li>Create a repository on <a href="https://github.com" target="_blank">GitHub</a></li>
-                        <li>Use GitHub's web interface to upload files</li>
-                        <li>Or use Git commands:
-                            <pre style="background: #0d1117; padding: 10px; border-radius: 6px; margin-top: 10px; overflow: auto;">
-git add .
-git commit -m "Add files"
-git push</pre>
-                        </li>
-                        <li>For automated uploads, use the <a href="https://docs.github.com/en/rest" target="_blank">GitHub API</a></li>
+                        <li>Go to your repository on <a href="https://github.com" target="_blank">GitHub</a></li>
+                        <li>Click "Add file" → "Upload files"</li>
+                        <li>Drag and drop or select files to upload</li>
+                        <li>Add a commit message and commit changes</li>
+                        <li>For automated uploads, use the <a href="https://docs.github.com/en/rest" target="_blank">GitHub API</a> with a personal access token</li>
                     </ol>
                 </div>
             </div>
@@ -444,15 +524,36 @@ git push</pre>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const repoSelect = document.getElementById('repoSelect');
             const uploadArea = document.getElementById('uploadArea');
             const fileInput = document.getElementById('fileInput');
             const fileList = document.getElementById('fileList');
             const fileUrl = document.getElementById('fileUrl');
             const copyBtn = document.getElementById('copyBtn');
             const notification = document.getElementById('notification');
+            const refreshBtn = document.getElementById('refreshBtn');
+            const newRepoForm = document.getElementById('newRepoForm');
+            
+            // Show/hide new repo form
+            repoSelect.addEventListener('change', function() {
+                if (this.value === 'new') {
+                    newRepoForm.style.display = 'block';
+                } else {
+                    newRepoForm.style.display = 'none';
+                }
+            });
+            
+            // Refresh repositories
+            refreshBtn.addEventListener('click', function() {
+                showNotification('Repositories refreshed');
+            });
             
             // File upload via browse button
             uploadArea.addEventListener('click', () => {
+                if (!repoSelect.value || repoSelect.value === 'new') {
+                    showNotification('Please select a repository first', true);
+                    return;
+                }
                 fileInput.click();
             });
             
@@ -475,6 +576,10 @@ git push</pre>
             });
             
             function highlight() {
+                if (!repoSelect.value || repoSelect.value === 'new') {
+                    showNotification('Please select a repository first', true);
+                    return;
+                }
                 uploadArea.classList.add('dragover');
             }
             
@@ -485,12 +590,20 @@ git push</pre>
             uploadArea.addEventListener('drop', handleDrop, false);
             
             function handleDrop(e) {
+                if (!repoSelect.value || repoSelect.value === 'new') {
+                    showNotification('Please select a repository first', true);
+                    return;
+                }
                 const dt = e.dataTransfer;
                 const files = dt.files;
                 handleFiles(files);
             }
             
             fileInput.addEventListener('change', function() {
+                if (!repoSelect.value || repoSelect.value === 'new') {
+                    showNotification('Please select a repository first', true);
+                    return;
+                }
                 handleFiles(this.files);
             });
             
@@ -556,7 +669,7 @@ git push</pre>
                 }
                 
                 // Update the file URL
-                fileUrl.textContent = `https://github.com/your-username/your-repo/blob/main/${file.name}`;
+                fileUrl.textContent = `https://github.com/your-username/${repoSelect.value}/blob/main/${file.name}`;
             }
             
             function simulateUploadProgress(progressBar, file, fileItem) {
@@ -564,7 +677,7 @@ git push</pre>
                 const interval = setInterval(() => {
                     if (width >= 100) {
                         clearInterval(interval);
-                        showNotification(`File "${file.name}" uploaded successfully`);
+                        showNotification(`File "${file.name}" uploaded to ${repoSelect.value} successfully`);
                         
                         // Enable download button after upload
                         const downloadBtn = fileItem.querySelector('.download-btn');
