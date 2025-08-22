@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase Storage Tutorial - Complete Guide</title>
+    <title>GitHub File Uploader</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -14,30 +14,32 @@
         }
         
         body {
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            background: linear-gradient(135deg, #24292e 0%, #2d333b 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 30px 20px;
-            color: #333;
+            color: #fff;
         }
         
         .container {
             width: 100%;
-            max-width: 1000px;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 900px;
+            background: #0d1117;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             overflow: hidden;
             margin-bottom: 30px;
+            border: 1px solid #30363d;
         }
         
         header {
-            background: #4a00e0;
+            background: #0d1117;
             color: white;
             padding: 25px;
             text-align: center;
+            border-bottom: 1px solid #30363d;
         }
         
         h1 {
@@ -55,136 +57,55 @@
             max-width: 600px;
             margin: 0 auto;
             line-height: 1.5;
+            color: #7d8590;
         }
         
         .content {
             padding: 30px;
         }
         
-        .section {
-            margin-bottom: 40px;
-        }
-        
-        .section-title {
-            font-size: 24px;
-            margin-bottom: 15px;
-            color: #4a00e0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #eee;
-        }
-        
-        .step {
-            background: #f8f9ff;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-        }
-        
-        .step-number {
-            display: inline-block;
-            background: #4a00e0;
-            color: white;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 32px;
-            margin-right: 10px;
-            font-weight: bold;
-        }
-        
-        .step-title {
-            font-size: 20px;
-            margin-bottom: 15px;
-            color: #333;
-        }
-        
-        .instructions {
-            line-height: 1.6;
-            margin-bottom: 15px;
-        }
-        
-        .instructions ol {
-            padding-left: 20px;
-            margin-bottom: 15px;
-        }
-        
-        .instructions li {
-            margin-bottom: 10px;
-        }
-        
-        .code-block {
-            background: #2d2d2d;
-            color: #f8f8f2;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: monospace;
-            overflow-x: auto;
-            margin: 15px 0;
-            line-height: 1.5;
-        }
-        
-        .highlight {
-            background: #ff6b6b;
-            color: white;
-            padding: 2px 5px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-        
-        .demo-section {
-            background: #eef0ff;
-            padding: 25px;
-            border-radius: 12px;
-            margin-top: 30px;
-        }
-        
         .upload-area {
-            border: 3px dashed #8e2de2;
-            border-radius: 12px;
+            border: 2px dashed #30363d;
+            border-radius: 8px;
             padding: 40px 20px;
             text-align: center;
             margin-bottom: 25px;
             transition: all 0.3s;
-            background: #f8f9ff;
+            background: #0d1117;
             cursor: pointer;
         }
         
         .upload-area:hover, .upload-area.dragover {
-            background: #eef0ff;
-            border-color: #4a00e0;
+            background: #161b22;
+            border-color: #58a6ff;
         }
         
         .upload-icon {
             font-size: 60px;
-            color: #8e2de2;
+            color: #58a6ff;
             margin-bottom: 15px;
         }
         
         .upload-text {
             font-size: 20px;
             margin-bottom: 15px;
-            color: #333;
+            color: #e6edf3;
         }
         
         .browse-btn {
-            background: #4a00e0;
+            background: #238636;
             color: white;
             padding: 12px 30px;
-            border-radius: 50px;
+            border-radius: 6px;
             font-weight: 600;
             display: inline-block;
             cursor: pointer;
             transition: background 0.3s;
-            font-size: 18px;
+            font-size: 16px;
         }
         
         .browse-btn:hover {
-            background: #3600a0;
+            background: #2ea043;
         }
         
         .file-input {
@@ -193,6 +114,17 @@
         
         .uploaded-files {
             margin-top: 30px;
+        }
+        
+        .section-title {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: #e6edf3;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .file-list {
@@ -204,15 +136,17 @@
             justify-content: space-between;
             align-items: center;
             padding: 15px;
-            background: #f8f9ff;
-            border-radius: 8px;
+            background: #161b22;
+            border-radius: 6px;
             margin-bottom: 10px;
             transition: transform 0.2s;
+            border: 1px solid #30363d;
         }
         
         .file-item:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border-color: #58a6ff;
         }
         
         .file-info {
@@ -223,7 +157,7 @@
         
         .file-icon {
             font-size: 28px;
-            color: #4a00e0;
+            color: #58a6ff;
         }
         
         .file-details {
@@ -233,13 +167,13 @@
         
         .file-name {
             font-weight: 600;
-            color: #333;
+            color: #e6edf3;
             font-size: 17px;
         }
         
         .file-size {
             font-size: 14px;
-            color: #777;
+            color: #7d8590;
         }
         
         .file-actions {
@@ -248,13 +182,13 @@
         }
         
         .action-btn {
-            background: #4a00e0;
+            background: #238636;
             color: white;
             border: none;
-            padding: 10px 18px;
+            padding: 8px 16px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 15px;
+            font-size: 14px;
             transition: background 0.3s;
             display: flex;
             align-items: center;
@@ -262,30 +196,38 @@
         }
         
         .action-btn:hover {
-            background: #3600a0;
+            background: #2ea043;
         }
         
         .download-btn {
-            background: #00b894;
+            background: #1f6feb;
         }
         
         .download-btn:hover {
-            background: #00a885;
+            background: #2c74e6;
+        }
+        
+        .replace-btn {
+            background: #da3633;
+        }
+        
+        .replace-btn:hover {
+            background: #f85149;
         }
         
         .progress-bar {
             width: 100%;
-            height: 8px;
-            background: #e0e7ff;
-            border-radius: 4px;
+            height: 6px;
+            background: #30363d;
+            border-radius: 3px;
             margin-top: 10px;
             overflow: hidden;
         }
         
         .progress {
             height: 100%;
-            background: #4a00e0;
-            border-radius: 4px;
+            background: #238636;
+            border-radius: 3px;
             width: 0%;
             transition: width 0.3s;
         }
@@ -293,14 +235,15 @@
         .link-display {
             margin-top: 30px;
             padding: 20px;
-            background: #eef0ff;
-            border-radius: 12px;
+            background: #161b22;
+            border-radius: 8px;
+            border: 1px solid #30363d;
         }
         
         .link-title {
             font-size: 20px;
             margin-bottom: 10px;
-            color: #333;
+            color: #e6edf3;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -309,18 +252,19 @@
         .link-url {
             display: flex;
             align-items: center;
-            background: white;
+            background: #0d1117;
             padding: 12px 15px;
-            border-radius: 8px;
+            border-radius: 6px;
             font-family: monospace;
-            border: 1px solid #ddd;
+            border: 1px solid #30363d;
             overflow-x: auto;
             font-size: 16px;
+            color: #7d8590;
         }
         
         .copy-btn {
             margin-left: 15px;
-            background: #4a00e0;
+            background: #1f6feb;
             color: white;
             border: none;
             padding: 10px 18px;
@@ -330,21 +274,22 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            white-space: nowrap;
         }
         
         .copy-btn:hover {
-            background: #3600a0;
+            background: #2c74e6;
         }
         
         .notification {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: #4CAF50;
+            background: #238636;
             color: white;
             padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             transform: translateX(100%);
             transition: transform 0.3s;
             z-index: 1000;
@@ -358,29 +303,47 @@
         }
         
         .notification.error {
-            background: #ff6b6b;
+            background: #da3633;
         }
         
-        .config-box {
-            background: #2d2d2d;
-            color: white;
+        .github-info {
+            background: #161b22;
             padding: 20px;
             border-radius: 8px;
-            margin: 20px 0;
-            font-family: monospace;
+            margin-top: 30px;
+            border: 1px solid #30363d;
+        }
+        
+        .info-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #e6edf3;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-content {
+            color: #7d8590;
             line-height: 1.6;
         }
         
-        .var-name {
-            color: #ff79c6;
+        .info-content ol {
+            padding-left: 20px;
+            margin-top: 10px;
         }
         
-        .var-value {
-            color: #f1fa8c;
+        .info-content li {
+            margin-bottom: 10px;
         }
         
-        .comment {
-            color: #6272a4;
+        .info-content a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+        
+        .info-content a:hover {
+            text-decoration: underline;
         }
         
         @media (max-width: 768px) {
@@ -427,202 +390,48 @@
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-fire"></i> Firebase Storage Tutorial</h1>
-            <p class="subtitle">Learn how to connect Firebase Storage to your web application for file uploads</p>
+            <h1><i class="fab fa-github"></i> GitHub File Uploader</h1>
+            <p class="subtitle">Upload files and store them directly on GitHub repositories</p>
         </header>
         
         <div class="content">
-            <div class="section">
-                <h2 class="section-title"><i class="fas fa-number">1</i> Create a Firebase Project</h2>
-                
-                <div class="step">
-                    <h3 class="step-title"><span class="step-number">1</span> Go to Firebase Console</h3>
-                    <div class="instructions">
-                        <p>Visit <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a> and sign in with your Google account.</p>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <h3 class="step-title"><span class="step-number">2</span> Create a New Project</h3>
-                    <div class="instructions">
-                        <ol>
-                            <li>Click on "Add project" or "Create a project"</li>
-                            <li>Enter a project name (e.g., "my-file-uploader")</li>
-                            <li>Follow the setup steps (Google Analytics is optional)</li>
-                            <li>Click "Create project" and wait for it to initialize</li>
-                        </ol>
-                    </div>
+            <div class="upload-area" id="uploadArea">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <p class="upload-text">Drag & drop your file here</p>
+                <div class="browse-btn">Select Files</div>
+                <input type="file" id="fileInput" class="file-input" multiple>
+            </div>
+            
+            <div class="uploaded-files">
+                <h2 class="section-title"><i class="fas fa-file"></i> Uploaded Files</h2>
+                <ul class="file-list" id="fileList">
+                    <!-- Files will be listed here -->
+                </ul>
+            </div>
+            
+            <div class="link-display">
+                <h3 class="link-title"><i class="fas fa-link"></i> GitHub File URL</h3>
+                <div class="link-url">
+                    <span id="fileUrl">https://github.com/username/repository/blob/main/</span>
+                    <button class="copy-btn" id="copyBtn"><i class="fas fa-copy"></i> Copy URL</button>
                 </div>
             </div>
             
-            <div class="section">
-                <h2 class="section-title"><i class="fas fa-number">2</i> Set Up Firebase Storage</h2>
-                
-                <div class="step">
-                    <h3 class="step-title"><span class="step-number">1</span> Enable Storage</h3>
-                    <div class="instructions">
-                        <ol>
-                            <li>In your Firebase project dashboard, click on "Storage" in the left menu</li>
-                            <li>Click "Get started"</li>
-                            <li>Choose your security rules (start in test mode for development)</li>
-                            <li>Select a location for your storage bucket</li>
-                            <li>Click "Done"</li>
-                        </ol>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <h3 class="step-title"><span class="step-number">2</span> Get Configuration Details</h3>
-                    <div class="instructions">
-                        <ol>
-                            <li>Go to Project Settings (click the gear icon next to "Project Overview")</li>
-                            <li>Scroll down to "Your apps" section</li>
-                            <li>Click the web icon to add a new web app</li>
-                            <li>Register your app with a name (e.g., "File Uploader")</li>
-                            <li>Copy the configuration object</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h2 class="section-title"><i class="fas fa-number">3</i> Integrate Firebase with Your Code</h2>
-                
-                <div class="step">
-                    <h3 class="step-title"><span class="step-number">1</span> Add Firebase SDK</h3>
-                    <div class="instructions">
-                        <p>Include the Firebase SDK in your HTML file by adding these scripts to the head section:</p>
-                        <div class="code-block">
-                            &lt;script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"&gt;&lt;/script&gt;<br>
-                            &lt;script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"&gt;&lt;/script&gt;
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <h3 class="step-title"><span class="step-number">2</span> Initialize Firebase</h3>
-                    <div class="instructions">
-                        <p>Add this code to your JavaScript, replacing with your actual Firebase config values:</p>
-                        <div class="config-box">
-                            <span class="comment">// Your web app's Firebase configuration</span><br>
-                            <span class="var-name">const</span> firebaseConfig = {<br>
-                            &nbsp;&nbsp;apiKey: <span class="var-value">"YOUR_API_KEY"</span>,<br>
-                            &nbsp;&nbsp;authDomain: <span class="var-value">"your-project.firebaseapp.com"</span>,<br>
-                            &nbsp;&nbsp;projectId: <span class="var-value">"your-project-id"</span>,<br>
-                            &nbsp;&nbsp;storageBucket: <span class="var-value">"your-project.appspot.com"</span>,<br>
-                            &nbsp;&nbsp;messagingSenderId: <span class="var-value">"123456789"</span>,<br>
-                            &nbsp;&nbsp;appId: <span class="var-value">"YOUR_APP_ID"</span><br>
-                            };<br><br>
-                            <span class="comment">// Initialize Firebase</span><br>
-                            firebase.initializeApp(firebaseConfig);<br>
-                            <span class="comment">// Get a reference to the storage service</span><br>
-                            <span class="var-name">const</span> storage = firebase.storage();
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h2 class="section-title"><i class="fas fa-number">4</i> Implement File Upload Function</h2>
-                
-                <div class="step">
-                    <h3 class="step-title"><span class="step-number">1</span> Create Upload Function</h3>
-                    <div class="instructions">
-                        <p>Add this function to handle file uploads to Firebase Storage:</p>
-                        <div class="code-block">
-                            function uploadFileToFirebase(file) {<br>
-                            &nbsp;&nbsp;// Create a storage reference<br>
-                            &nbsp;&nbsp;const storageRef = firebase.storage().ref();<br>
-                            &nbsp;&nbsp;const fileRef = storageRef.child('uploads/' + file.name);<br><br>
-                            &nbsp;&nbsp;// Upload file to Firebase<br>
-                            &nbsp;&nbsp;const uploadTask = fileRef.put(file);<br><br>
-                            &nbsp;&nbsp;// Monitor upload progress<br>
-                            &nbsp;&nbsp;uploadTask.on('state_changed', <br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;(snapshot) => {<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Progress monitoring code here<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;},<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;(error) => {<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Handle errors<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;},<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;() => {<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Upload completed successfully<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Get download URL and update UI<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
-                            &nbsp;&nbsp;);<br>
-                            }
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="demo-section">
-                <h2 class="section-title"><i class="fas fa-vial"></i> Live Demo</h2>
-                <p>Try uploading a file to see Firebase Storage in action (configuration required):</p>
-                
-                <div class="upload-area" id="uploadArea">
-                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                    <p class="upload-text">Drag & drop your file here</p>
-                    <div class="browse-btn">Browse Files</div>
-                    <input type="file" id="fileInput" class="file-input">
-                </div>
-                
-                <div class="uploaded-files">
-                    <h3 class="section-title"><i class="fas fa-file"></i> Uploaded Files</h3>
-                    <ul class="file-list" id="fileList">
-                        <!-- Files will be listed here -->
-                    </ul>
-                </div>
-                
-                <div class="link-display">
-                    <h3 class="link-title"><i class="fas fa-link"></i> Your File URL</h3>
-                    <div class="link-url">
-                        <span id="fileUrl">Upload a file to get your download link</span>
-                        <button class="copy-btn" id="copyBtn"><i class="fas fa-copy"></i> Copy URL</button>
-                    </div>
-                </div>
-                
-                <div class="config-box" style="margin-top: 20px;">
-                    <span class="comment">// To make this demo work:</span><br>
-                    <span class="comment">// 1. Follow the steps above to set up Firebase</span><br>
-                    <span class="comment">// 2. Replace the firebaseConfig values with your own</span><br>
-                    <span class="comment">// 3. Implement the upload function in your code</span>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h2 class="section-title"><i class="fas fa-number">5</i> Deploy Your Application</h2>
-                
-                <div class="step">
-                    <h3 class="step-title"><span class="step-number">1</span> Choose a Hosting Platform</h3>
-                    <div class="instructions">
-                        <p>You can deploy your application to:</p>
-                        <ul>
-                            <li><strong>Firebase Hosting</strong> - Directly integrated with Firebase</li>
-                            <li><strong>Netlify</strong> - Drag and drop deployment</li>
-                            <li><strong>Vercel</strong> - Connect your GitHub repository</li>
-                            <li><strong>GitHub Pages</strong> - Free hosting for static sites</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <h3 class="step-title"><span class="step-number">2</span> Configure Storage Rules</h3>
-                    <div class="instructions">
-                        <p>For production, update your Firebase Storage rules to secure your data:</p>
-                        <div class="code-block">
-                            rules_version = '2';<br>
-                            service firebase.storage {<br>
-                            &nbsp;&nbsp;match /b/{bucket}/o {<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;match /uploads/{allPaths=**} {<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allow read, write: if request.auth != null;<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Or customize based on your needs<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
-                            &nbsp;&nbsp;}<br>
-                            }
-                        </div>
-                    </div>
+            <div class="github-info">
+                <h3 class="info-title"><i class="fas fa-info-circle"></i> How to actually upload to GitHub</h3>
+                <div class="info-content">
+                    <p>This demo simulates GitHub file uploads. To actually upload files to GitHub:</p>
+                    <ol>
+                        <li>Create a repository on <a href="https://github.com" target="_blank">GitHub</a></li>
+                        <li>Use GitHub's web interface to upload files</li>
+                        <li>Or use Git commands:
+                            <pre style="background: #0d1117; padding: 10px; border-radius: 6px; margin-top: 10px; overflow: auto;">
+git add .
+git commit -m "Add files"
+git push</pre>
+                        </li>
+                        <li>For automated uploads, use the <a href="https://docs.github.com/en/rest" target="_blank">GitHub API</a></li>
+                    </ol>
                 </div>
             </div>
         </div>
@@ -634,20 +443,6 @@
     </div>
 
     <script>
-        // Firebase configuration - REPLACE WITH YOUR OWN CONFIG
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "your-project.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "YOUR_APP_ID"
-        };
-        
-        // Initialize Firebase (commented out for safety)
-        // firebase.initializeApp(firebaseConfig);
-        // const storage = firebase.storage();
-        
         document.addEventListener('DOMContentLoaded', function() {
             const uploadArea = document.getElementById('uploadArea');
             const fileInput = document.getElementById('fileInput');
@@ -703,88 +498,96 @@
             function handleFiles(files) {
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
-                    simulateUpload(file);
+                    uploadFile(file);
                 }
             }
             
-            function simulateUpload(file) {
-                // This is a simulation - in a real app, you would use the Firebase code above
+            function uploadFile(file) {
+                // Check if file with same name already exists
                 const existingFileItem = document.querySelector(`.file-item[data-filename="${file.name}"]`);
                 
                 if (existingFileItem) {
+                    // Replace existing file
+                    const fileInfo = existingFileItem.querySelector('.file-details');
+                    fileInfo.querySelector('.file-size').textContent = formatFileSize(file.size);
+                    
                     showNotification(`File "${file.name}" replaced successfully`);
                 } else {
-                    // Create file item in UI
-                    const fileItem = createFileItem(file);
+                    // Add new file to the list
+                    const fileItem = document.createElement('li');
+                    fileItem.className = 'file-item';
+                    fileItem.setAttribute('data-filename', file.name);
+                    
+                    const fileExtension = getFileExtension(file.name);
+                    const fileIcon = getFileIcon(fileExtension);
+                    
+                    fileItem.innerHTML = `
+                        <div class="file-info">
+                            <i class="file-icon ${fileIcon}"></i>
+                            <div class="file-details">
+                                <span class="file-name">${file.name}</span>
+                                <span class="file-size">${formatFileSize(file.size)}</span>
+                                <div class="progress-bar">
+                                    <div class="progress"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="file-actions">
+                            <button class="action-btn download-btn"><i class="fas fa-download"></i> Download</button>
+                            <button class="action-btn replace-btn"><i class="fas fa-exchange-alt"></i> Replace</button>
+                        </div>
+                    `;
+                    
                     fileList.appendChild(fileItem);
                     
-                    // Show uploading state
-                    const progressBar = fileItem.querySelector('.progress');
-                    
                     // Simulate upload progress
-                    let progress = 0;
-                    const interval = setInterval(() => {
-                        progress += Math.random() * 15;
-                        if (progress >= 100) {
-                            progress = 100;
-                            clearInterval(interval);
-                            
-                            // Show completion
-                            fileUrl.textContent = `https://firebasestorage.googleapis.com/v0/b/your-project.appspot.com/o/uploads%2F${encodeURIComponent(file.name)}?alt=media`;
-                            
-                            // Make download button functional
-                            const downloadBtn = fileItem.querySelector('.download-btn');
-                            downloadBtn.addEventListener('click', function() {
-                                showNotification(`Downloading "${file.name}"...`);
-                            });
-                            
-                            showNotification(`File "${file.name}" uploaded successfully`);
-                        }
-                        progressBar.style.width = progress + '%';
-                    }, 200);
+                    const progressBar = fileItem.querySelector('.progress');
+                    simulateUploadProgress(progressBar, file, fileItem);
                     
                     // Add event listener for replace button
                     fileItem.querySelector('.replace-btn').addEventListener('click', function() {
                         fileInput.click();
                     });
+                    
+                    // Add event listener for download button
+                    fileItem.querySelector('.download-btn').addEventListener('click', function() {
+                        simulateDownload(file.name);
+                    });
                 }
+                
+                // Update the file URL
+                fileUrl.textContent = `https://github.com/your-username/your-repo/blob/main/${file.name}`;
             }
             
-            function createFileItem(file) {
-                const fileItem = document.createElement('li');
-                fileItem.className = 'file-item';
-                fileItem.setAttribute('data-filename', file.name);
+            function simulateUploadProgress(progressBar, file, fileItem) {
+                let width = 0;
+                const interval = setInterval(() => {
+                    if (width >= 100) {
+                        clearInterval(interval);
+                        showNotification(`File "${file.name}" uploaded successfully`);
+                        
+                        // Enable download button after upload
+                        const downloadBtn = fileItem.querySelector('.download-btn');
+                        downloadBtn.disabled = false;
+                    } else {
+                        width += Math.random() * 15;
+                        progressBar.style.width = Math.min(width, 100) + '%';
+                    }
+                }, 200);
+            }
+            
+            // Simulate file download
+            function simulateDownload(filename) {
+                showNotification(`Downloading "${filename}"...`);
                 
-                const fileExtension = getFileExtension(file.name);
-                const fileIcon = getFileIcon(fileExtension);
-                
-                fileItem.innerHTML = `
-                    <div class="file-info">
-                        <i class="file-icon ${fileIcon}"></i>
-                        <div class="file-details">
-                            <span class="file-name">${file.name}</span>
-                            <span class="file-size">${formatFileSize(file.size)}</span>
-                            <div class="progress-bar">
-                                <div class="progress"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="file-actions">
-                        <button class="action-btn download-btn"><i class="fas fa-download"></i> Download</button>
-                        <button class="action-btn replace-btn"><i class="fas fa-exchange-alt"></i> Replace</button>
-                    </div>
-                `;
-                
-                return fileItem;
+                // In a real application, this would trigger the actual download
+                setTimeout(() => {
+                    showNotification(`Download of "${filename}" completed!`);
+                }, 2000);
             }
             
             // Copy URL to clipboard
             copyBtn.addEventListener('click', function() {
-                if (fileUrl.textContent === 'Upload a file to get your download link') {
-                    showNotification('Please upload a file first', true);
-                    return;
-                }
-                
                 const tempTextArea = document.createElement('textarea');
                 tempTextArea.value = fileUrl.textContent;
                 document.body.appendChild(tempTextArea);
@@ -792,7 +595,7 @@
                 document.execCommand('copy');
                 document.body.removeChild(tempTextArea);
                 
-                showNotification('URL copied to clipboard');
+                showNotification('GitHub URL copied to clipboard');
             });
             
             // Helper functions
