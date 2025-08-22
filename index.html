@@ -557,7 +557,7 @@
                     <button class="btn" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Login</button>
                 </div>
                 <div class="info-content">
-                    <p><strong>Note:</strong> For security, we recommend using a <a href="https://github.com/settings/tokens" target="_blank">GitHub Personal Access Token</a> instead of your password.</p>
+                    <p><strong>Note:</strong> For security, we recommend using a <a href="https://github.com/settings/tokens" target="_blank">GitHub Personal Access Token</a> instead of your password. The token needs the "repo" scope.</p>
                 </div>
             </div>
             
@@ -663,17 +663,21 @@
             let isLoggedIn = false;
             let userData = null;
             let userRepos = [];
+            let authToken = '';
             let activities = JSON.parse(localStorage.getItem('github_uploader_activities') || '[]');
             
             // Check if user was previously logged in
             const savedUserData = localStorage.getItem('github_uploader_user');
-            if (savedUserData) {
+            const savedAuthToken = localStorage.getItem('github_uploader_token');
+            if (savedUserData && savedAuthToken) {
                 try {
                     userData = JSON.parse(savedUserData);
+                    authToken = savedAuthToken;
                     isLoggedIn = true;
                     initializeApp();
                 } catch (e) {
                     localStorage.removeItem('github_uploader_user');
+                    localStorage.removeItem('github_uploader_token');
                 }
             }
             
@@ -779,28 +783,37 @@
                     return;
                 }
                 
-                // Simulate login (in a real app, you would use GitHub API)
-                simulateLogin(username, password);
+                // Authenticate with GitHub API
+                authenticateWithGitHub(username, password);
             }
             
-            function simulateLogin(username, password) {
+            function authenticateWithGitHub(username, password) {
                 // Show loading state
                 loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
                 loginBtn.disabled = true;
                 
-                // Simulate API call delay
-                setTimeout(() => {
-                    // In a real application, you would authenticate with GitHub API
-                    // For demo purposes, we're simulating a successful login
-                    userData = {
-                        login: username,
-                        avatar_url: 'https://github.com/' + username + '.png',
-                        name: username,
-                        public_repos: Math.floor(Math.random() * 50) + 5
-                    };
+                // Create a Basic Auth token
+                const authString = btoa(`${username}:${password}`);
+                authToken = authString;
+                
+                // Verify credentials by fetching user info
+                fetch('https://api.github.com/user', {
+                    headers: {
+                        'Authorization': `Basic ${authToken}`
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Authentication failed. Please check your credentials.');
+                    }
+                    return response.json();
+                })
+                .then(user => {
+                    userData = user;
                     
-                    // Save user data to localStorage
+                    // Save user data and token to localStorage
                     localStorage.setItem('github_uploader_user', JSON.stringify(userData));
+                    localStorage.setItem('github_uploader_token', authToken);
                     
                     isLoggedIn = true;
                     initializeApp();
@@ -810,13 +823,20 @@
                     // Reset login button
                     loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
                     loginBtn.disabled = false;
-                }, 1500);
+                })
+                .catch(error => {
+                    showNotification(error.message, true);
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                    loginBtn.disabled = false;
+                });
             }
             
             function handleLogout() {
                 isLoggedIn = false;
                 userData = null;
+                authToken = '';
                 localStorage.removeItem('github_uploader_user');
+                localStorage.removeItem('github_uploader_token');
                 
                 // Reset UI
                 loginSection.style.display = 'block';
@@ -847,7 +867,7 @@
                 // Display user info
                 userAvatar.src = userData.avatar_url;
                 userName.textContent = userData.name || userData.login;
-                repoCount.textContent = `${userData.public_repos} repositories`;
+                repoCount.textContent = `${userData.public_repos} public repositories`;
                 
                 // Fetch user repositories
                 fetchUserRepositories();
@@ -861,26 +881,20 @@
                 refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing';
                 refreshBtn.disabled = true;
                 
-                // Simulate API call to get user repos
-                setTimeout(() => {
-                    // In a real application, you would fetch from GitHub API
-                    // For demo, we're generating some repo names
-                    userRepos = [
-                        { name: 'my-website', default_branch: 'main' },
-                        { name: 'project-files', default_branch: 'main' },
-                        { name: 'documents', default_branch: 'main' },
-                        { name: 'images', default_branch: 'main' },
-                        { name: 'my-bot', default_branch: 'main' },
-                        { name: 'code-samples', default_branch: 'main' }
-                    ];
-                    
-                    // Add user's repos to the list (plus a few generated ones)
-                    for (let i = 0; i < userData.public_repos - 6; i++) {
-                        userRepos.push({ 
-                            name: `repo-${i+1}`, 
-                            default_branch: 'main' 
-                        });
+                // Fetch user repositories from GitHub API
+                fetch('https://api.github.com/user/repos?per_page=100', {
+                    headers: {
+                        'Authorization': `Basic ${authToken}`
                     }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch repositories');
+                    }
+                    return response.json();
+                })
+                .then(repos => {
+                    userRepos = repos;
                     
                     // Populate the repo dropdown
                     repoSelect.innerHTML = '<option value="">-- Select a repository --</option>';
@@ -888,9 +902,7 @@
                         const option = document.createElement('option');
                         option.value = repo.name;
                         option.textContent = repo.name;
-                        if (repo.name === 'my-bot') {
-                            option.selected = true;
-                        }
+                        option.setAttribute('data-branch', repo.default_branch);
                         repoSelect.appendChild(option);
                     });
                     
@@ -902,19 +914,25 @@
                     refreshBtn.disabled = false;
                     
                     showNotification(`Found ${userRepos.length} repositories`);
-                }, 1000);
+                })
+                .catch(error => {
+                    showNotification(error.message, true);
+                    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+                    refreshBtn.disabled = false;
+                });
             }
             
             function handleFiles(files) {
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
-                    uploadFile(file);
+                    uploadFileToGitHub(file);
                 }
             }
             
-            function uploadFile(file) {
+            function uploadFileToGitHub(file) {
                 const selectedRepo = repoSelect.value;
-                const branch = userRepos.find(repo => repo.name === selectedRepo)?.default_branch || 'main';
+                const selectedOption = repoSelect.options[repoSelect.selectedIndex];
+                const branch = selectedOption.getAttribute('data-branch') || 'main';
                 
                 // Check if file with same name already exists
                 const existingFileItem = document.querySelector(`.file-item[data-filename="${file.name}"]`);
@@ -924,8 +942,9 @@
                     const fileInfo = existingFileItem.querySelector('.file-details');
                     fileInfo.querySelector('.file-size').textContent = formatFileSize(file.size);
                     
-                    showNotification(`File "${file.name}" replaced successfully`);
-                    addActivity(`Replaced file "${file.name}" in ${selectedRepo}`);
+                    // Update the progress bar for replacement
+                    const progressBar = existingFileItem.querySelector('.progress');
+                    simulateUploadProgress(progressBar, file, existingFileItem, selectedRepo, true);
                 } else {
                     // Add new file to the list
                     const fileItem = document.createElement('li');
@@ -956,7 +975,7 @@
                     
                     // Simulate upload progress
                     const progressBar = fileItem.querySelector('.progress');
-                    simulateUploadProgress(progressBar, file, fileItem, selectedRepo);
+                    simulateUploadProgress(progressBar, file, fileItem, selectedRepo, false);
                     
                     // Add event listener for replace button
                     fileItem.querySelector('.replace-btn').addEventListener('click', function() {
@@ -971,15 +990,115 @@
                 
                 // Update the file URL
                 fileUrl.textContent = `https://github.com/${userData.login}/${selectedRepo}/blob/${branch}/${file.name}`;
+                
+                // Read file content and upload to GitHub
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    const encodedContent = btoa(unescape(encodeURIComponent(content)));
+                    
+                    // Check if file exists first
+                    checkFileExists(selectedRepo, file.name, branch)
+                        .then(exists => {
+                            if (exists) {
+                                // Update existing file
+                                return updateFile(selectedRepo, file.name, encodedContent, branch, 'Updating file');
+                            } else {
+                                // Create new file
+                                return createFile(selectedRepo, file.name, encodedContent, branch, 'Adding file');
+                            }
+                        })
+                        .then(response => {
+                            if (response) {
+                                showNotification(`File "${file.name}" uploaded to ${selectedRepo} successfully`);
+                                addActivity(`Uploaded file "${file.name}" to ${selectedRepo}`);
+                            }
+                        })
+                        .catch(error => {
+                            showNotification(`Error uploading file: ${error.message}`, true);
+                            addActivity(`Failed to upload "${file.name}" to ${selectedRepo}`);
+                        });
+                };
+                reader.readAsText(file);
             }
             
-            function simulateUploadProgress(progressBar, file, fileItem, repoName) {
+            function checkFileExists(repo, path, branch) {
+                return fetch(`https://api.github.com/repos/${userData.login}/${repo}/contents/${path}?ref=${branch}`, {
+                    headers: {
+                        'Authorization': `Basic ${authToken}`
+                    }
+                })
+                .then(response => {
+                    return response.ok;
+                })
+                .catch(() => {
+                    return false;
+                });
+            }
+            
+            function createFile(repo, path, content, branch, message) {
+                return fetch(`https://api.github.com/repos/${userData.login}/${repo}/contents/${path}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Basic ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        content: content,
+                        branch: branch
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to create file');
+                    }
+                    return response.json();
+                });
+            }
+            
+            function updateFile(repo, path, content, branch, message) {
+                // First get the SHA of the existing file
+                return fetch(`https://api.github.com/repos/${userData.login}/${repo}/contents/${path}?ref=${branch}`, {
+                    headers: {
+                        'Authorization': `Basic ${authToken}`
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to get file info');
+                    }
+                    return response.json();
+                })
+                .then(fileInfo => {
+                    // Then update the file with the SHA
+                    return fetch(`https://api.github.com/repos/${userData.login}/${repo}/contents/${path}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Basic ${authToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            content: content,
+                            branch: branch,
+                            sha: fileInfo.sha
+                        })
+                    });
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to update file');
+                    }
+                    return response.json();
+                });
+            }
+            
+            function simulateUploadProgress(progressBar, file, fileItem, repoName, isReplace) {
                 let width = 0;
                 const interval = setInterval(() => {
                     if (width >= 100) {
                         clearInterval(interval);
-                        showNotification(`File "${file.name}" uploaded to ${repoName} successfully`);
-                        addActivity(`Uploaded file "${file.name}" to ${repoName}`);
                         
                         // Enable download button after upload
                         const downloadBtn = fileItem.querySelector('.download-btn');
@@ -1061,52 +1180,68 @@
                 return filename.split('.').pop().toLowerCase();
             }
             
-            function getFileIcon(extension) {
-                const iconMap = {
-                    'zip': 'fas fa-file-archive',
-                    'rar': 'fas fa-file-archive',
-                    '7z': 'fas fa-file-archive',
-                    'html': 'fas fa-code',
-                    'css': 'fas fa-code',
-                    'js': 'fas fa-code',
-                    'pdf': 'fas fa-file-pdf',
-                    'doc': 'fas fa-file-word',
-                    'docx': 'fas fa-file-word',
-                    'xls': 'fas fa-file-excel',
-                    'xlsx': 'fas fa-file-excel',
-                    'ppt': 'fas fa-file-powerpoint',
-                    'pptx': 'fas fa-file-powerpoint',
-                    'txt': 'fas fa-file-alt',
-                    'jpg': 'fas fa-file-image',
-                    'jpeg': 'fas fa-file-image',
-                    'png': 'fas fa-file-image',
-                    'gif': 'fas fa-file-image',
-                    'mp3': 'fas fa-file-audio',
-                    'mp4': 'fas fa-file-video',
-                    'avi': 'fas fa-file-video'
-                };
-                
-                return iconMap[extension] || 'fas fa-file';
-            }
-            
-            function showNotification(message, isError = false) {
-                notification.querySelector('span').textContent = message;
-                notification.classList.remove('error');
-                
-                if (isError) {
-                    notification.classList.add('error');
-                    notification.querySelector('i').className = 'fas fa-exclamation-circle';
-                } else {
-                    notification.querySelector('i').className = 'fas fa-check-circle';
-                }
-                
-                notification.classList.add('show');
-                
-                setTimeout(() => {
-                    notification.classList.remove('show');
-                }, 3000);
-            }
-        });
-    </script>
+function getFileIcon(extension) {
+    const iconMap = {
+        'zip': 'fas fa-file-archive',
+        'rar': 'fas fa-file-archive',
+        '7z': 'fas fa-file-archive',
+        'html': 'fas fa-code',
+        'css': 'fas fa-code',
+        'js': 'fas fa-code',
+        'json': 'fas fa-code',
+        'php': 'fas fa-code',
+        'py': 'fas fa-code',
+        'java': 'fas fa-code',
+        'cpp': 'fas fa-code',
+        'c': 'fas fa-code',
+        'txt': 'fas fa-file-alt',
+        'md': 'fas fa-file-alt',
+        'pdf': 'fas fa-file-pdf',
+        'doc': 'fas fa-file-word',
+        'docx': 'fas fa-file-word',
+        'xls': 'fas fa-file-excel',
+        'xlsx': 'fas fa-file-excel',
+        'ppt': 'fas fa-file-powerpoint',
+        'pptx': 'fas fa-file-powerpoint',
+        'jpg': 'fas fa-file-image',
+        'jpeg': 'fas fa-file-image',
+        'png': 'fas fa-file-image',
+        'gif': 'fas fa-file-image',
+        'bmp': 'fas fa-file-image',
+        'svg': 'fas fa-file-image',
+        'mp3': 'fas fa-file-audio',
+        'wav': 'fas fa-file-audio',
+        'mp4': 'fas fa-file-video',
+        'mov': 'fas fa-file-video',
+        'avi': 'fas fa-file-video',
+        'exe': 'fas fa-cog',
+        'msi': 'fas fa-cog'
+    };
+    
+    return iconMap[extension] || 'fas fa-file';
+}
+
+function showNotification(message, isError = false) {
+    const notification = document.getElementById('notification');
+    notification.querySelector('span').textContent = message;
+    
+    if (isError) {
+        notification.classList.add('error');
+    } else {
+        notification.classList.remove('error');
+    }
+    
+    notification.classList.add('show');
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3000);
+}
+
+// Initialize the app if there are saved activities
+if (activities.length > 0) {
+    loadActivities();
+}
+</script>
 </body>
 </html>
