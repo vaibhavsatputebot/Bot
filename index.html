@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub File Uploader with API Integration</title>
+    <title>GitHub File Uploader with Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -64,12 +64,21 @@
             padding: 30px;
         }
         
-        .auth-section {
+        .login-section {
             background: #161b22;
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 25px;
             border: 1px solid #30363d;
+        }
+        
+        .repo-selection {
+            background: #161b22;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid #30363d;
+            display: none;
         }
         
         .section-title {
@@ -99,7 +108,23 @@
             outline: none;
         }
         
-        input:focus {
+        input[type="text"]:focus, input[type="password"]:focus {
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3);
+        }
+        
+        select {
+            flex: 1;
+            background: #0d1117;
+            color: #e6edf3;
+            border: 1px solid #30363d;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+        }
+        
+        select:focus {
             border-color: #58a6ff;
             box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3);
         }
@@ -130,34 +155,12 @@
             background: #484f58;
         }
         
-        .btn-danger {
+        .btn-logout {
             background: #da3633;
         }
         
-        .btn-danger:hover {
+        .btn-logout:hover {
             background: #f85149;
-        }
-        
-        .repo-selection {
-            background: #161b22;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            border: 1px solid #30363d;
-            display: none;
-        }
-        
-        select {
-            flex: 1;
-            background: #0d1117;
-            color: #e6edf3;
-            border: 1px solid #30363d;
-            padding: 12px 15px;
-            border-radius: 6px;
-            font-size: 16px;
-            outline: none;
-            width: 100%;
-            margin-bottom: 15px;
         }
         
         .upload-area {
@@ -394,25 +397,95 @@
             background: #da3633;
         }
         
+        .github-info {
+            background: #161b22;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            border: 1px solid #30363d;
+        }
+        
+        .info-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #e6edf3;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-content {
+            color: #7d8590;
+            line-height: 1.6;
+        }
+        
+        .info-content ol {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .info-content li {
+            margin-bottom: 10px;
+        }
+        
+        .info-content a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+        
+        .info-content a:hover {
+            text-decoration: underline;
+        }
+        
         .user-info {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #30363d;
+            margin-bottom: 15px;
         }
         
-        .avatar {
+        .user-avatar {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            border: 2px solid #58a6ff;
+            border: 2px solid #30363d;
         }
         
-        .username {
+        .user-name {
             font-weight: 600;
             color: #e6edf3;
+        }
+        
+        .activity-log {
+            margin-top: 30px;
+            background: #161b22;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            display: none;
+        }
+        
+        .activity-list {
+            list-style: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .activity-item {
+            padding: 10px;
+            border-bottom: 1px solid #30363d;
+            color: #7d8590;
+            font-size: 14px;
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-time {
+            color: #58a6ff;
+            font-size: 12px;
+            margin-top: 5px;
         }
         
         @media (max-width: 768px) {
@@ -428,11 +501,11 @@
                 padding: 20px;
             }
             
-            .input-group {
+            .input-group, .select-group {
                 flex-direction: column;
             }
             
-            input[type="text"], input[type="password"] {
+            input[type="text"], input[type="password"], select {
                 width: 100%;
             }
             
@@ -468,50 +541,44 @@
     <div class="container">
         <header>
             <h1><i class="fab fa-github"></i> GitHub File Uploader</h1>
-            <p class="subtitle">Connect to your GitHub account and upload files to your repositories</p>
+            <p class="subtitle">Upload files to your GitHub repositories with ease</p>
         </header>
         
         <div class="content">
-            <div class="auth-section" id="authSection">
-                <h2 class="section-title"><i class="fas fa-key"></i> GitHub Authentication</h2>
+            <div class="login-section" id="loginSection">
+                <h2 class="section-title"><i class="fas fa-sign-in-alt"></i> Login to GitHub</h2>
                 <div class="input-group">
                     <input type="text" id="username" placeholder="GitHub Username">
                 </div>
                 <div class="input-group">
-                    <input type="password" id="token" placeholder="GitHub Personal Access Token">
+                    <input type="password" id="password" placeholder="GitHub Password/Token">
                 </div>
                 <div class="input-group">
-                    <button class="btn" id="connectBtn"><i class="fas fa-link"></i> Connect to GitHub</button>
-                    <button class="btn btn-secondary" id="helpBtn"><i class="fas fa-question-circle"></i> How to get token</button>
+                    <button class="btn" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Login</button>
                 </div>
-                
-                <div id="tokenHelp" style="display: none; margin-top: 15px; padding: 15px; background: #0d1117; border-radius: 6px; border: 1px solid #30363d;">
-                    <h3 style="margin-bottom: 10px; color: #e6edf3;">How to get a GitHub Personal Access Token:</h3>
-                    <ol style="color: #7d8590; padding-left: 20px; line-height: 1.6;">
-                        <li>Go to your GitHub Settings → Developer settings</li>
-                        <li>Click on "Personal access tokens" → "Tokens (classic)"</li>
-                        <li>Click "Generate new token" → "Generate new token (classic)"</li>
-                        <li>Give your token a descriptive name</li>
-                        <li>Select the "repo" scope (to access repositories)</li>
-                        <li>Click "Generate token" at the bottom</li>
-                        <li>Copy the token and paste it above</li>
-                    </ol>
+                <div class="info-content">
+                    <p><strong>Note:</strong> For security, we recommend using a <a href="https://github.com/settings/tokens" target="_blank">GitHub Personal Access Token</a> instead of your password.</p>
+                </div>
+            </div>
+            
+            <div id="userInfoSection" style="display: none;">
+                <div class="user-info">
+                    <img src="" alt="User Avatar" class="user-avatar" id="userAvatar">
+                    <div>
+                        <div class="user-name" id="userName"></div>
+                        <div id="repoCount"></div>
+                    </div>
+                    <button class="btn btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
                 </div>
             </div>
             
             <div class="repo-selection" id="repoSection">
                 <h2 class="section-title"><i class="fas fa-folder"></i> Select Repository</h2>
-                <select id="repoSelect">
-                    <option value="">Loading repositories...</option>
-                </select>
-                <div class="input-group">
-                    <button class="btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh Repositories</button>
-                    <button class="btn btn-secondary" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
-                </div>
-                
-                <div class="user-info" id="userInfo">
-                    <img src="" alt="Avatar" class="avatar" id="userAvatar">
-                    <span class="username" id="userName"></span>
+                <div class="select-group">
+                    <select id="repoSelect">
+                        <option value="">-- Select a repository --</option>
+                    </select>
+                    <button class="btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
                 </div>
             </div>
             
@@ -536,134 +603,91 @@
                     <button class="copy-btn" id="copyBtn"><i class="fas fa-copy"></i> Copy URL</button>
                 </div>
             </div>
+            
+            <div class="activity-log" id="activityLog">
+                <h3 class="section-title"><i class="fas fa-history"></i> Recent Activity</h3>
+                <ul class="activity-list" id="activityList">
+                    <!-- Activity items will be listed here -->
+                </ul>
+            </div>
+            
+            <div class="github-info">
+                <h3 class="info-title"><i class="fas fa-info-circle"></i> How to upload files to GitHub</h3>
+                <div class="info-content">
+                    <p>This tool allows you to upload files directly to your GitHub repositories.</p>
+                    <ol>
+                        <li>Login with your GitHub credentials</li>
+                        <li>Select a repository from your account</li>
+                        <li>Drag and drop or select files to upload</li>
+                        <li>Your files will be uploaded to the selected repository</li>
+                        <li>All activities are logged for your reference</li>
+                    </ol>
+                </div>
+            </div>
         </div>
     </div>
     
     <div class="notification" id="notification">
         <i class="fas fa-check-circle"></i>
-        <span>Connected to GitHub successfully!</span>
+        <span>File uploaded successfully!</span>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const authSection = document.getElementById('authSection');
+            // DOM Elements
+            const loginSection = document.getElementById('loginSection');
+            const userInfoSection = document.getElementById('userInfoSection');
             const repoSection = document.getElementById('repoSection');
             const uploadArea = document.getElementById('uploadArea');
             const uploadedFiles = document.getElementById('uploadedFiles');
             const linkDisplay = document.getElementById('linkDisplay');
+            const activityLog = document.getElementById('activityLog');
+            
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const loginBtn = document.getElementById('loginBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const userAvatar = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName');
+            const repoCount = document.getElementById('repoCount');
+            const repoSelect = document.getElementById('repoSelect');
+            const refreshBtn = document.getElementById('refreshBtn');
             const fileInput = document.getElementById('fileInput');
             const fileList = document.getElementById('fileList');
             const fileUrl = document.getElementById('fileUrl');
             const copyBtn = document.getElementById('copyBtn');
             const notification = document.getElementById('notification');
-            const connectBtn = document.getElementById('connectBtn');
-            const helpBtn = document.getElementById('helpBtn');
-            const tokenHelp = document.getElementById('tokenHelp');
-            const repoSelect = document.getElementById('repoSelect');
-            const refreshBtn = document.getElementById('refreshBtn');
-            const logoutBtn = document.getElementById('logoutBtn');
-            const userInfo = document.getElementById('userInfo');
-            const userAvatar = document.getElementById('userAvatar');
-            const userName = document.getElementById('userName');
+            const activityList = document.getElementById('activityList');
             
-            let username = '';
-            let token = '';
-            let repos = [];
+            // State variables
+            let isLoggedIn = false;
+            let userData = null;
+            let userRepos = [];
+            let activities = JSON.parse(localStorage.getItem('github_uploader_activities') || '[]');
             
-            // Toggle token help
-            helpBtn.addEventListener('click', function() {
-                tokenHelp.style.display = tokenHelp.style.display === 'none' ? 'block' : 'none';
-            });
-            
-            // Connect to GitHub
-            connectBtn.addEventListener('click', function() {
-                username = document.getElementById('username').value.trim();
-                token = document.getElementById('token').value.trim();
-                
-                if (!username || !token) {
-                    showNotification('Please enter both username and token', true);
-                    return;
+            // Check if user was previously logged in
+            const savedUserData = localStorage.getItem('github_uploader_user');
+            if (savedUserData) {
+                try {
+                    userData = JSON.parse(savedUserData);
+                    isLoggedIn = true;
+                    initializeApp();
+                } catch (e) {
+                    localStorage.removeItem('github_uploader_user');
                 }
-                
-                // Simulate API connection
-                simulateAPIConnection();
-            });
-            
-            // Simulate API connection to GitHub
-            function simulateAPIConnection() {
-                showNotification('Connecting to GitHub...');
-                
-                // In a real implementation, you would use the GitHub API
-                // For this demo, we'll simulate the connection
-                setTimeout(() => {
-                    // Simulate successful connection
-                    authSection.style.display = 'none';
-                    repoSection.style.display = 'block';
-                    uploadArea.style.display = 'block';
-                    
-                    // Simulate user info
-                    userAvatar.src = `https://github.com/${username}.png?size=40`;
-                    userName.textContent = username;
-                    userInfo.style.display = 'flex';
-                    
-                    // Simulate loading repositories
-                    loadRepositories();
-                    
-                    showNotification('Connected to GitHub successfully!');
-                }, 1500);
             }
             
-            // Load repositories
-            function loadRepositories() {
-                repoSelect.innerHTML = '<option value="">Loading repositories...</option>';
-                
-                // Simulate API call to get repositories
-                setTimeout(() => {
-                    // Sample repositories for demo
-                    repos = [
-                        { name: 'my-website', full_name: `${username}/my-website` },
-                        { name: 'project-files', full_name: `${username}/project-files` },
-                        { name: 'documents', full_name: `${username}/documents` },
-                        { name: 'images', full_name: `${username}/images` }
-                    ];
-                    
-                    // Populate repository dropdown
-                    repoSelect.innerHTML = '<option value="">Select a repository</option>';
-                    repos.forEach(repo => {
-                        const option = document.createElement('option');
-                        option.value = repo.name;
-                        option.textContent = repo.name;
-                        repoSelect.appendChild(option);
-                    });
-                    
-                    showNotification('Repositories loaded successfully!');
-                }, 1000);
-            }
-            
-            // Refresh repositories
-            refreshBtn.addEventListener('click', function() {
-                loadRepositories();
-            });
-            
-            // Logout
-            logoutBtn.addEventListener('click', function() {
-                // Reset UI
-                authSection.style.display = 'block';
-                repoSection.style.display = 'none';
-                uploadArea.style.display = 'none';
-                uploadedFiles.style.display = 'none';
-                linkDisplay.style.display = 'none';
-                
-                // Clear fields
-                document.getElementById('username').value = '';
-                document.getElementById('token').value = '';
-                fileList.innerHTML = '';
-                
-                showNotification('Logged out successfully');
-            });
+            // Event Listeners
+            loginBtn.addEventListener('click', handleLogin);
+            logoutBtn.addEventListener('click', handleLogout);
+            refreshBtn.addEventListener('click', fetchUserRepositories);
             
             // File upload via browse button
             uploadArea.addEventListener('click', () => {
+                if (!isLoggedIn) {
+                    showNotification('Please login first', true);
+                    return;
+                }
                 if (!repoSelect.value) {
                     showNotification('Please select a repository first', true);
                     return;
@@ -690,6 +714,10 @@
             });
             
             function highlight() {
+                if (!isLoggedIn) {
+                    showNotification('Please login first', true);
+                    return;
+                }
                 if (!repoSelect.value) {
                     showNotification('Please select a repository first', true);
                     return;
@@ -704,6 +732,10 @@
             uploadArea.addEventListener('drop', handleDrop, false);
             
             function handleDrop(e) {
+                if (!isLoggedIn) {
+                    showNotification('Please login first', true);
+                    return;
+                }
                 if (!repoSelect.value) {
                     showNotification('Please select a repository first', true);
                     return;
@@ -714,6 +746,10 @@
             }
             
             fileInput.addEventListener('change', function() {
+                if (!isLoggedIn) {
+                    showNotification('Please login first', true);
+                    return;
+                }
                 if (!repoSelect.value) {
                     showNotification('Please select a repository first', true);
                     return;
@@ -721,7 +757,154 @@
                 handleFiles(this.files);
             });
             
-            // Handle file processing
+            // Copy URL to clipboard
+            copyBtn.addEventListener('click', function() {
+                const tempTextArea = document.createElement('textarea');
+                tempTextArea.value = fileUrl.textContent;
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempTextArea);
+                
+                showNotification('GitHub URL copied to clipboard');
+            });
+            
+            // Functions
+            function handleLogin() {
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
+                
+                if (!username || !password) {
+                    showNotification('Please enter both username and password/token', true);
+                    return;
+                }
+                
+                // Simulate login (in a real app, you would use GitHub API)
+                simulateLogin(username, password);
+            }
+            
+            function simulateLogin(username, password) {
+                // Show loading state
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+                loginBtn.disabled = true;
+                
+                // Simulate API call delay
+                setTimeout(() => {
+                    // In a real application, you would authenticate with GitHub API
+                    // For demo purposes, we're simulating a successful login
+                    userData = {
+                        login: username,
+                        avatar_url: 'https://github.com/' + username + '.png',
+                        name: username,
+                        public_repos: Math.floor(Math.random() * 50) + 5
+                    };
+                    
+                    // Save user data to localStorage
+                    localStorage.setItem('github_uploader_user', JSON.stringify(userData));
+                    
+                    isLoggedIn = true;
+                    initializeApp();
+                    
+                    showNotification('Login successful!');
+                    
+                    // Reset login button
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                    loginBtn.disabled = false;
+                }, 1500);
+            }
+            
+            function handleLogout() {
+                isLoggedIn = false;
+                userData = null;
+                localStorage.removeItem('github_uploader_user');
+                
+                // Reset UI
+                loginSection.style.display = 'block';
+                userInfoSection.style.display = 'none';
+                repoSection.style.display = 'none';
+                uploadArea.style.display = 'none';
+                uploadedFiles.style.display = 'none';
+                linkDisplay.style.display = 'none';
+                activityLog.style.display = 'none';
+                
+                // Clear inputs
+                usernameInput.value = '';
+                passwordInput.value = '';
+                
+                showNotification('Logged out successfully');
+            }
+            
+            function initializeApp() {
+                // Update UI for logged in user
+                loginSection.style.display = 'none';
+                userInfoSection.style.display = 'block';
+                repoSection.style.display = 'block';
+                uploadArea.style.display = 'block';
+                uploadedFiles.style.display = 'block';
+                linkDisplay.style.display = 'block';
+                activityLog.style.display = 'block';
+                
+                // Display user info
+                userAvatar.src = userData.avatar_url;
+                userName.textContent = userData.name || userData.login;
+                repoCount.textContent = `${userData.public_repos} repositories`;
+                
+                // Fetch user repositories
+                fetchUserRepositories();
+                
+                // Load activities
+                loadActivities();
+            }
+            
+            function fetchUserRepositories() {
+                // Show loading state
+                refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing';
+                refreshBtn.disabled = true;
+                
+                // Simulate API call to get user repos
+                setTimeout(() => {
+                    // In a real application, you would fetch from GitHub API
+                    // For demo, we're generating some repo names
+                    userRepos = [
+                        { name: 'my-website', default_branch: 'main' },
+                        { name: 'project-files', default_branch: 'main' },
+                        { name: 'documents', default_branch: 'main' },
+                        { name: 'images', default_branch: 'main' },
+                        { name: 'my-bot', default_branch: 'main' },
+                        { name: 'code-samples', default_branch: 'main' }
+                    ];
+                    
+                    // Add user's repos to the list (plus a few generated ones)
+                    for (let i = 0; i < userData.public_repos - 6; i++) {
+                        userRepos.push({ 
+                            name: `repo-${i+1}`, 
+                            default_branch: 'main' 
+                        });
+                    }
+                    
+                    // Populate the repo dropdown
+                    repoSelect.innerHTML = '<option value="">-- Select a repository --</option>';
+                    userRepos.forEach(repo => {
+                        const option = document.createElement('option');
+                        option.value = repo.name;
+                        option.textContent = repo.name;
+                        if (repo.name === 'my-bot') {
+                            option.selected = true;
+                        }
+                        repoSelect.appendChild(option);
+                    });
+                    
+                    // Add activity
+                    addActivity('Refreshed repository list');
+                    
+                    // Reset refresh button
+                    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+                    refreshBtn.disabled = false;
+                    
+                    showNotification(`Found ${userRepos.length} repositories`);
+                }, 1000);
+            }
+            
             function handleFiles(files) {
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
@@ -730,6 +913,9 @@
             }
             
             function uploadFile(file) {
+                const selectedRepo = repoSelect.value;
+                const branch = userRepos.find(repo => repo.name === selectedRepo)?.default_branch || 'main';
+                
                 // Check if file with same name already exists
                 const existingFileItem = document.querySelector(`.file-item[data-filename="${file.name}"]`);
                 
@@ -739,6 +925,7 @@
                     fileInfo.querySelector('.file-size').textContent = formatFileSize(file.size);
                     
                     showNotification(`File "${file.name}" replaced successfully`);
+                    addActivity(`Replaced file "${file.name}" in ${selectedRepo}`);
                 } else {
                     // Add new file to the list
                     const fileItem = document.createElement('li');
@@ -767,12 +954,9 @@
                     
                     fileList.appendChild(fileItem);
                     
-                    // Show uploaded files section
-                    uploadedFiles.style.display = 'block';
-                    
                     // Simulate upload progress
                     const progressBar = fileItem.querySelector('.progress');
-                    simulateUploadProgress(progressBar, file, fileItem);
+                    simulateUploadProgress(progressBar, file, fileItem, selectedRepo);
                     
                     // Add event listener for replace button
                     fileItem.querySelector('.replace-btn').addEventListener('click', function() {
@@ -785,17 +969,17 @@
                     });
                 }
                 
-                // Update the file URL and show link display
-                fileUrl.textContent = `https://github.com/${username}/${repoSelect.value}/blob/main/${file.name}`;
-                linkDisplay.style.display = 'block';
+                // Update the file URL
+                fileUrl.textContent = `https://github.com/${userData.login}/${selectedRepo}/blob/${branch}/${file.name}`;
             }
             
-            function simulateUploadProgress(progressBar, file, fileItem) {
+            function simulateUploadProgress(progressBar, file, fileItem, repoName) {
                 let width = 0;
                 const interval = setInterval(() => {
                     if (width >= 100) {
                         clearInterval(interval);
-                        showNotification(`File "${file.name}" uploaded to ${repoSelect.value} successfully`);
+                        showNotification(`File "${file.name}" uploaded to ${repoName} successfully`);
+                        addActivity(`Uploaded file "${file.name}" to ${repoName}`);
                         
                         // Enable download button after upload
                         const downloadBtn = fileItem.querySelector('.download-btn');
@@ -807,9 +991,9 @@
                 }, 200);
             }
             
-            // Simulate file download
             function simulateDownload(filename) {
                 showNotification(`Downloading "${filename}"...`);
+                addActivity(`Downloaded file "${filename}"`);
                 
                 // In a real application, this would trigger the actual download
                 setTimeout(() => {
@@ -817,17 +1001,52 @@
                 }, 2000);
             }
             
-            // Copy URL to clipboard
-            copyBtn.addEventListener('click', function() {
-                const tempTextArea = document.createElement('textarea');
-                tempTextArea.value = fileUrl.textContent;
-                document.body.appendChild(tempTextArea);
-                tempTextArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(tempTextArea);
+            function addActivity(message) {
+                const timestamp = new Date().toISOString();
+                activities.unshift({
+                    message,
+                    timestamp
+                });
                 
-                showNotification('GitHub URL copied to clipboard');
-            });
+                // Keep only the last 10 activities
+                if (activities.length > 10) {
+                    activities = activities.slice(0, 10);
+                }
+                
+                // Save to localStorage
+                localStorage.setItem('github_uploader_activities', JSON.stringify(activities));
+                
+                // Update UI
+                loadActivities();
+            }
+            
+            function loadActivities() {
+                activityList.innerHTML = '';
+                
+                if (activities.length === 0) {
+                    const li = document.createElement('li');
+                    li.className = 'activity-item';
+                    li.textContent = 'No activities yet';
+                    activityList.appendChild(li);
+                    return;
+                }
+                
+                activities.forEach(activity => {
+                    const li = document.createElement('li');
+                    li.className = 'activity-item';
+                    
+                    const date = new Date(activity.timestamp);
+                    const timeString = date.toLocaleTimeString();
+                    const dateString = date.toLocaleDateString();
+                    
+                    li.innerHTML = `
+                        <div>${activity.message}</div>
+                        <div class="activity-time">${dateString} at ${timeString}</div>
+                    `;
+                    
+                    activityList.appendChild(li);
+                });
+            }
             
             // Helper functions
             function formatFileSize(bytes) {
