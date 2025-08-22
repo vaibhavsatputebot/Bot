@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub File Uploader with Repository Selection</title>
+    <title>GitHub File Uploader with API Integration</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -64,7 +64,7 @@
             padding: 30px;
         }
         
-        .repo-selection {
+        .auth-section {
             background: #161b22;
             padding: 20px;
             border-radius: 8px;
@@ -81,13 +81,14 @@
             gap: 10px;
         }
         
-        .select-group {
+        .input-group {
             display: flex;
             gap: 10px;
             align-items: center;
+            margin-bottom: 15px;
         }
         
-        select {
+        input[type="text"], input[type="password"] {
             flex: 1;
             background: #0d1117;
             color: #e6edf3;
@@ -98,7 +99,7 @@
             outline: none;
         }
         
-        select:focus {
+        input:focus {
             border-color: #58a6ff;
             box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3);
         }
@@ -129,6 +130,36 @@
             background: #484f58;
         }
         
+        .btn-danger {
+            background: #da3633;
+        }
+        
+        .btn-danger:hover {
+            background: #f85149;
+        }
+        
+        .repo-selection {
+            background: #161b22;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid #30363d;
+            display: none;
+        }
+        
+        select {
+            flex: 1;
+            background: #0d1117;
+            color: #e6edf3;
+            border: 1px solid #30363d;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
         .upload-area {
             border: 2px dashed #30363d;
             border-radius: 8px;
@@ -138,6 +169,7 @@
             transition: all 0.3s;
             background: #0d1117;
             cursor: pointer;
+            display: none;
         }
         
         .upload-area:hover, .upload-area.dragover {
@@ -179,6 +211,7 @@
         
         .uploaded-files {
             margin-top: 30px;
+            display: none;
         }
         
         .file-list {
@@ -292,6 +325,7 @@
             background: #161b22;
             border-radius: 8px;
             border: 1px solid #30363d;
+            display: none;
         }
         
         .link-title {
@@ -360,44 +394,25 @@
             background: #da3633;
         }
         
-        .github-info {
-            background: #161b22;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 30px;
-            border: 1px solid #30363d;
-        }
-        
-        .info-title {
-            font-size: 20px;
-            margin-bottom: 15px;
-            color: #e6edf3;
+        .user-info {
             display: flex;
             align-items: center;
             gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #30363d;
         }
         
-        .info-content {
-            color: #7d8590;
-            line-height: 1.6;
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #58a6ff;
         }
         
-        .info-content ol {
-            padding-left: 20px;
-            margin-top: 10px;
-        }
-        
-        .info-content li {
-            margin-bottom: 10px;
-        }
-        
-        .info-content a {
-            color: #58a6ff;
-            text-decoration: none;
-        }
-        
-        .info-content a:hover {
-            text-decoration: underline;
+        .username {
+            font-weight: 600;
+            color: #e6edf3;
         }
         
         @media (max-width: 768px) {
@@ -413,11 +428,11 @@
                 padding: 20px;
             }
             
-            .select-group {
+            .input-group {
                 flex-direction: column;
             }
             
-            select {
+            input[type="text"], input[type="password"] {
                 width: 100%;
             }
             
@@ -453,29 +468,50 @@
     <div class="container">
         <header>
             <h1><i class="fab fa-github"></i> GitHub File Uploader</h1>
-            <p class="subtitle">Upload files to your GitHub repositories with ease</p>
+            <p class="subtitle">Connect to your GitHub account and upload files to your repositories</p>
         </header>
         
         <div class="content">
-            <div class="repo-selection">
-                <h2 class="section-title"><i class="fas fa-folder"></i> Select Repository</h2>
-                <div class="select-group">
-                    <select id="repoSelect">
-                        <option value="">-- Select a repository --</option>
-                        <option value="my-website">my-website</option>
-                        <option value="project-files">project-files</option>
-                        <option value="documents">documents</option>
-                        <option value="images">images</option>
-                        <option value="new">+ Create new repository</option>
-                    </select>
-                    <button class="btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
+            <div class="auth-section" id="authSection">
+                <h2 class="section-title"><i class="fas fa-key"></i> GitHub Authentication</h2>
+                <div class="input-group">
+                    <input type="text" id="username" placeholder="GitHub Username">
+                </div>
+                <div class="input-group">
+                    <input type="password" id="token" placeholder="GitHub Personal Access Token">
+                </div>
+                <div class="input-group">
+                    <button class="btn" id="connectBtn"><i class="fas fa-link"></i> Connect to GitHub</button>
+                    <button class="btn btn-secondary" id="helpBtn"><i class="fas fa-question-circle"></i> How to get token</button>
                 </div>
                 
-                <div id="newRepoForm" style="display: none; margin-top: 15px;">
-                    <div class="select-group">
-                        <input type="text" placeholder="New repository name" style="flex: 1; background: #0d1117; color: #e6edf3; border: 1px solid #30363d; padding: 12px 15px; border-radius: 6px; font-size: 16px;">
-                        <button class="btn"><i class="fas fa-plus"></i> Create</button>
-                    </div>
+                <div id="tokenHelp" style="display: none; margin-top: 15px; padding: 15px; background: #0d1117; border-radius: 6px; border: 1px solid #30363d;">
+                    <h3 style="margin-bottom: 10px; color: #e6edf3;">How to get a GitHub Personal Access Token:</h3>
+                    <ol style="color: #7d8590; padding-left: 20px; line-height: 1.6;">
+                        <li>Go to your GitHub Settings → Developer settings</li>
+                        <li>Click on "Personal access tokens" → "Tokens (classic)"</li>
+                        <li>Click "Generate new token" → "Generate new token (classic)"</li>
+                        <li>Give your token a descriptive name</li>
+                        <li>Select the "repo" scope (to access repositories)</li>
+                        <li>Click "Generate token" at the bottom</li>
+                        <li>Copy the token and paste it above</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="repo-selection" id="repoSection">
+                <h2 class="section-title"><i class="fas fa-folder"></i> Select Repository</h2>
+                <select id="repoSelect">
+                    <option value="">Loading repositories...</option>
+                </select>
+                <div class="input-group">
+                    <button class="btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh Repositories</button>
+                    <button class="btn btn-secondary" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+                
+                <div class="user-info" id="userInfo">
+                    <img src="" alt="Avatar" class="avatar" id="userAvatar">
+                    <span class="username" id="userName"></span>
                 </div>
             </div>
             
@@ -486,32 +522,18 @@
                 <input type="file" id="fileInput" class="file-input" multiple>
             </div>
             
-            <div class="uploaded-files">
+            <div class="uploaded-files" id="uploadedFiles">
                 <h2 class="section-title"><i class="fas fa-file"></i> Uploaded Files</h2>
                 <ul class="file-list" id="fileList">
                     <!-- Files will be listed here -->
                 </ul>
             </div>
             
-            <div class="link-display">
+            <div class="link-display" id="linkDisplay">
                 <h3 class="link-title"><i class="fas fa-link"></i> GitHub File URL</h3>
                 <div class="link-url">
                     <span id="fileUrl">https://github.com/username/repository/blob/main/</span>
                     <button class="copy-btn" id="copyBtn"><i class="fas fa-copy"></i> Copy URL</button>
-                </div>
-            </div>
-            
-            <div class="github-info">
-                <h3 class="info-title"><i class="fas fa-info-circle"></i> How to upload files to GitHub</h3>
-                <div class="info-content">
-                    <p>This demo simulates GitHub file uploads. To actually upload files to GitHub:</p>
-                    <ol>
-                        <li>Go to your repository on <a href="https://github.com" target="_blank">GitHub</a></li>
-                        <li>Click "Add file" → "Upload files"</li>
-                        <li>Drag and drop or select files to upload</li>
-                        <li>Add a commit message and commit changes</li>
-                        <li>For automated uploads, use the <a href="https://docs.github.com/en/rest" target="_blank">GitHub API</a> with a personal access token</li>
-                    </ol>
                 </div>
             </div>
         </div>
@@ -519,38 +541,130 @@
     
     <div class="notification" id="notification">
         <i class="fas fa-check-circle"></i>
-        <span>File uploaded successfully!</span>
+        <span>Connected to GitHub successfully!</span>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const repoSelect = document.getElementById('repoSelect');
+            const authSection = document.getElementById('authSection');
+            const repoSection = document.getElementById('repoSection');
             const uploadArea = document.getElementById('uploadArea');
+            const uploadedFiles = document.getElementById('uploadedFiles');
+            const linkDisplay = document.getElementById('linkDisplay');
             const fileInput = document.getElementById('fileInput');
             const fileList = document.getElementById('fileList');
             const fileUrl = document.getElementById('fileUrl');
             const copyBtn = document.getElementById('copyBtn');
             const notification = document.getElementById('notification');
+            const connectBtn = document.getElementById('connectBtn');
+            const helpBtn = document.getElementById('helpBtn');
+            const tokenHelp = document.getElementById('tokenHelp');
+            const repoSelect = document.getElementById('repoSelect');
             const refreshBtn = document.getElementById('refreshBtn');
-            const newRepoForm = document.getElementById('newRepoForm');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const userInfo = document.getElementById('userInfo');
+            const userAvatar = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName');
             
-            // Show/hide new repo form
-            repoSelect.addEventListener('change', function() {
-                if (this.value === 'new') {
-                    newRepoForm.style.display = 'block';
-                } else {
-                    newRepoForm.style.display = 'none';
-                }
+            let username = '';
+            let token = '';
+            let repos = [];
+            
+            // Toggle token help
+            helpBtn.addEventListener('click', function() {
+                tokenHelp.style.display = tokenHelp.style.display === 'none' ? 'block' : 'none';
             });
+            
+            // Connect to GitHub
+            connectBtn.addEventListener('click', function() {
+                username = document.getElementById('username').value.trim();
+                token = document.getElementById('token').value.trim();
+                
+                if (!username || !token) {
+                    showNotification('Please enter both username and token', true);
+                    return;
+                }
+                
+                // Simulate API connection
+                simulateAPIConnection();
+            });
+            
+            // Simulate API connection to GitHub
+            function simulateAPIConnection() {
+                showNotification('Connecting to GitHub...');
+                
+                // In a real implementation, you would use the GitHub API
+                // For this demo, we'll simulate the connection
+                setTimeout(() => {
+                    // Simulate successful connection
+                    authSection.style.display = 'none';
+                    repoSection.style.display = 'block';
+                    uploadArea.style.display = 'block';
+                    
+                    // Simulate user info
+                    userAvatar.src = `https://github.com/${username}.png?size=40`;
+                    userName.textContent = username;
+                    userInfo.style.display = 'flex';
+                    
+                    // Simulate loading repositories
+                    loadRepositories();
+                    
+                    showNotification('Connected to GitHub successfully!');
+                }, 1500);
+            }
+            
+            // Load repositories
+            function loadRepositories() {
+                repoSelect.innerHTML = '<option value="">Loading repositories...</option>';
+                
+                // Simulate API call to get repositories
+                setTimeout(() => {
+                    // Sample repositories for demo
+                    repos = [
+                        { name: 'my-website', full_name: `${username}/my-website` },
+                        { name: 'project-files', full_name: `${username}/project-files` },
+                        { name: 'documents', full_name: `${username}/documents` },
+                        { name: 'images', full_name: `${username}/images` }
+                    ];
+                    
+                    // Populate repository dropdown
+                    repoSelect.innerHTML = '<option value="">Select a repository</option>';
+                    repos.forEach(repo => {
+                        const option = document.createElement('option');
+                        option.value = repo.name;
+                        option.textContent = repo.name;
+                        repoSelect.appendChild(option);
+                    });
+                    
+                    showNotification('Repositories loaded successfully!');
+                }, 1000);
+            }
             
             // Refresh repositories
             refreshBtn.addEventListener('click', function() {
-                showNotification('Repositories refreshed');
+                loadRepositories();
+            });
+            
+            // Logout
+            logoutBtn.addEventListener('click', function() {
+                // Reset UI
+                authSection.style.display = 'block';
+                repoSection.style.display = 'none';
+                uploadArea.style.display = 'none';
+                uploadedFiles.style.display = 'none';
+                linkDisplay.style.display = 'none';
+                
+                // Clear fields
+                document.getElementById('username').value = '';
+                document.getElementById('token').value = '';
+                fileList.innerHTML = '';
+                
+                showNotification('Logged out successfully');
             });
             
             // File upload via browse button
             uploadArea.addEventListener('click', () => {
-                if (!repoSelect.value || repoSelect.value === 'new') {
+                if (!repoSelect.value) {
                     showNotification('Please select a repository first', true);
                     return;
                 }
@@ -576,7 +690,7 @@
             });
             
             function highlight() {
-                if (!repoSelect.value || repoSelect.value === 'new') {
+                if (!repoSelect.value) {
                     showNotification('Please select a repository first', true);
                     return;
                 }
@@ -590,7 +704,7 @@
             uploadArea.addEventListener('drop', handleDrop, false);
             
             function handleDrop(e) {
-                if (!repoSelect.value || repoSelect.value === 'new') {
+                if (!repoSelect.value) {
                     showNotification('Please select a repository first', true);
                     return;
                 }
@@ -600,7 +714,7 @@
             }
             
             fileInput.addEventListener('change', function() {
-                if (!repoSelect.value || repoSelect.value === 'new') {
+                if (!repoSelect.value) {
                     showNotification('Please select a repository first', true);
                     return;
                 }
@@ -653,6 +767,9 @@
                     
                     fileList.appendChild(fileItem);
                     
+                    // Show uploaded files section
+                    uploadedFiles.style.display = 'block';
+                    
                     // Simulate upload progress
                     const progressBar = fileItem.querySelector('.progress');
                     simulateUploadProgress(progressBar, file, fileItem);
@@ -668,8 +785,9 @@
                     });
                 }
                 
-                // Update the file URL
-                fileUrl.textContent = `https://github.com/your-username/${repoSelect.value}/blob/main/${file.name}`;
+                // Update the file URL and show link display
+                fileUrl.textContent = `https://github.com/${username}/${repoSelect.value}/blob/main/${file.name}`;
+                linkDisplay.style.display = 'block';
             }
             
             function simulateUploadProgress(progressBar, file, fileItem) {
